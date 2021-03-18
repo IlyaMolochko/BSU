@@ -2,6 +2,8 @@
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include "Predicates.h"
+#include <iostream>
+using namespace std;
 
 sf::Vector2f lerp(float t, const sf::Vector2f a, const sf::Vector2f b) {
     return a + t * (b - a);
@@ -172,59 +174,55 @@ public:
     void draw(sf::RenderWindow &window, const sf::Vector2i &mpos) {
         Line *l = new Line(nodes[0]->getPosition().x, nodes[0]->getPosition().y,
                            nodes.back()->getPosition().x, nodes.back()->getPosition().y);
+        lines.push_back(l);
         int num_intersections = 0;
         float x = mpos.x, y = mpos.y;
         int orient;
-        sf::Vector2f min_point = l->p0, max_point = l->p1;
-        if (min_point.y > max_point.y){
-            std::swap(min_point, max_point);
-        }
+        sf::Vector2f min_point, max_point;
         bool inside = false;
-        if (max_point.y <= y or min_point.y > y){
-            inside = false;
-        } else {
-            orient = orient2d(min_point, max_point, mpos);
-            if (orient == 0){
-                inside = true;
-            } else if (orient > 0){
-                ++num_intersections;
-            }
-        }
-        for (int i = 0; i < nlines and !inside; ++i){
+        for (int i = 0; i <= nlines and !inside; ++i){
             min_point = lines[i]->p0;
             max_point = lines[i]->p1;
             if (min_point.y > max_point.y){
                 std::swap(min_point, max_point);
             }
-            if (max_point.y <= y or min_point.y > y){
-                continue;
-            }
             orient = orient2d(min_point, max_point, mpos);
-            if (orient == 0){
+            if (orient == 0 and max_point.y >= y and min_point.y <= y
+            and x <= fmax(max_point.x, min_point.x) and x <= fmin(max_point.x, min_point.x)){
+//                cerr << "line" << '\n';
                 inside = true;
-            } else if (orient > 0){
+            } else if (max_point.y == min_point.y){
+                continue;
+            } else if (y == max_point.y and x < fmax(max_point.x, min_point.x)){
+                ++num_intersections;
+            } else if (fmin(max_point.y, min_point.y) == y){
+                continue;
+            } else if (max_point.y < y or min_point.y > y){
+                continue;
+            } else if (orient == 1){
                 ++num_intersections;
             }
         }
+//        if (num_intersections % 2){
+//            cerr << num_intersections << '\n';
+//        }
         inside |= (num_intersections % 2);
         sf::Color c = sf::Color::White;
         if (inside){
+//            cerr << num_intersections << '\n';
             c = sf::Color::Red;
         }
 
         for (int i = 0; i < size; i++){
             window.draw(*nodes[i]);
         }
-//        lines
         if (drawLoop) {
-            for (int i = 0; i < nlines; i++) {
+            for (int i = 0; i <= nlines; i++) {
                 lines[i]->line[0].color = c;
                 lines[i]->line[1].color = c;
                 window.draw(lines[i]->line, 2, sf::Lines);
             }
-            l->line[0].color = c;
-            l->line[1].color = c;
-            window.draw(l->line, 2, sf::Lines);
+            lines.pop_back();
 
         }
     }
@@ -299,7 +297,7 @@ public:
             Line *l = new Line(points[points.size() - 2]->getPosition().x, points[points.size() - 2]->getPosition().y,
                                points[points.size() - 1]->getPosition().x, points[points.size() - 1]->getPosition().y);
             lines.push_back(l);
-       }
+        }
 
     }
 

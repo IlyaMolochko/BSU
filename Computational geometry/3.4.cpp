@@ -12,12 +12,12 @@ using namespace exact;
 /*
  Заносим в стэк точку pl и первые две отсортированные точки
  Далее для каждой оставшейся точки выполняем следующие действия:
-1.	Убираем точки из стэка, пока следующие три точки образуют
+1.  Убираем точки из стэка, пока следующие три точки образуют
  не поворот против часовой стрелки (для проверки ориентации точек также используем предикаты Шевчука):
-a)	Точка, идущая в стэке после вершины.
-b)	Вершина стэка.
-c)	Текущая точка из отсортированного массива точек.
-2.	Если таких точек нет или мы их убрали, то заносим текущую точку из отсортированного массива в стэк.
+a)  Точка, идущая в стэке после вершины.
+b)  Вершина стэка.
+c)  Текущая точка из отсортированного массива точек.
+2.  Если таких точек нет или мы их убрали, то заносим текущую точку из отсортированного массива в стэк.
  */
 
 exact::position orient2d(Vertex p1, Vertex p2, Vertex p3) {
@@ -71,13 +71,13 @@ void generatePoints(VertexArray &points,
                     list<Vertex> &ps,
                     Vertex &pl,
                     int n,
-                    double width = 1920,
-                    double height = 1080) {
+                    double width = 1280,
+                    double height = 720) {
     ps.clear();
     std::default_random_engine generator;
     generator.seed(time(nullptr));
-    normal_distribution<double> x(width / 2, 100);
-    normal_distribution<double> y(height / 2, 100);
+    normal_distribution<double> x(width / 2, 50);
+    normal_distribution<double> y(height / 2, 50);
 
     Vertex p;
     pl.position.x = numeric_limits<double>::max();
@@ -102,8 +102,8 @@ void generatePoints(VertexArray &points,
 
 
 int main() {
-    double width = 1920;
-    double height = 1080;
+    double width = 1280;
+    double height = 720;
     sf::RenderWindow window(VideoMode(width, height), "SFML");
     int n = 100000;
     VertexArray points(Points, n);
@@ -126,7 +126,8 @@ int main() {
                      */
                     ps.sort([&pl](Vertex a, Vertex b) {
                         if (orient2d(pl, a, b) == 0) {
-                            return dist(pl, a) <= dist(pl, b);
+                            return a.position.x < b.position.x;
+//                            return dist(pl, a) <= dist(pl, b);
                         }
                         return orient2d(pl, a, b) == 1;
                     });
